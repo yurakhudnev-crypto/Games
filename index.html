@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🍱 Create Your Bento - Spotlight 8</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8eaf6 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+  }
+
+  .header {
+    text-align: center;
+    padding: 12px 10px;
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    color: white;
+    box-shadow: 0 4px 20px rgba(196, 77, 255, 0.3);
+  }
+  .header h1 { font-size: 1.5em; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+  .header p { font-size: 0.85em; opacity: 0.9; margin-top: 3px; }
+  .header .lesson-info {
+    background: rgba(255,255,255,0.2);
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 15px;
+    margin-top: 5px;
+    font-size: 0.75em;
+  }
+
+  .stage-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .stage-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    flex: 1;
+    max-width: 200px;
+    min-width: 140px;
+  }
+  .stage-btn.active {
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    color: white;
+    box-shadow: 0 4px 15px rgba(196, 77, 255, 0.4);
+    transform: scale(1.02);
+  }
+  .stage-btn:not(.active) {
+    background: white;
+    color: #666;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  .stage-btn .badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #4caf50;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    font-weight: 800;
+  }
+  .stage-btn .badge.hidden { display: none; }
+
+  .stage { display: none; padding: 10px; max-width: 600px; margin: 0 auto; }
+  .stage.active { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .matching-instruction, .bento-instruction {
+    text-align: center;
+    font-size: 0.95em;
+    color: #555;
+    margin-bottom: 10px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    line-height: 1.4;
+  }
+  .matching-instruction span { color: #c44dff; font-weight: 800; }
+
+  .score-board {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .score-item {
+    background: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    font-weight: 700;
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+  .score-item .num { color: #c44dff; font-size: 1.1em; }
+
+  .matching-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .food-column, .word-column {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .food-card, .word-card {
+    background: white;
+    border-radius: 12px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 2px solid transparent;
+    user-select: none;
+  }
+  .food-card:active, .word-card:active {
+    transform: scale(0.96);
+  }
+  .food-card.selected {
+    border-color: #c44dff;
+    background: #f3e5f5;
+  }
+  .word-card.selected {
+    border-color: #ff6b9d;
+    background: #fce4ec;
+  }
+  .food-card.correct, .word-card.correct {
+    border-color: #4caf50;
+    background: #e8f5e9;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .food-card.wrong, .word-card.wrong {
+    border-color: #f44336;
+    background: #ffebee;
+    animation: shake 0.4s;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .food-image { width: 40px; height: 40px; flex-shrink: 0; }
+  .food-name-en { font-weight: 700; font-size: 0.85em; color: #333; }
+  .food-name-ru { font-weight: 700; font-size: 0.85em; color: #333; }
+
+  .bento-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .bento-box {
+    background: linear-gradient(145deg, #f8bbd0, #f48fb1);
+    border-radius: 20px;
+    padding: 12px;
+    box-shadow: 0 8px 30px rgba(244, 143, 177, 0.4),
+                inset 0 2px 10px rgba(255,255,255,0.3);
+    position: relative;
+  }
+  .bento-box::before {
+    content: '🐻 ⭐ ️';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7em;
+    letter-spacing: 8px;
+  }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    min-height: 220px;
+  }
+  .bento-grid .bento-slot:nth-child(4) {
+    grid-column: 1 / 3;
+  }
+  .bento-grid .bento-slot:nth-child(5) {
+    grid-column: 3 / 4;
+  }
+
+  .bento-slot {
+    background: rgba(255,255,255,0.6);
+    border-radius: 12px;
+    border: 2px dashed rgba(255,255,255,0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 65px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    padding: 4px;
+  }
+  .bento-slot:active {
+    transform: scale(0.95);
+  }
+  .bento-slot:hover {
+    background: rgba(255,255,255,0.8);
+    border-color: white;
+  }
+  .bento-slot.filled {
+    border-style: solid;
+    border-color: white;
+    background: rgba(255,255,255,0.85);
+  }
+  .bento-slot .slot-image { width: 45px; height: 45px; }
+  .bento-slot .slot-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7em;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .bento-slot.filled .slot-remove { display: flex; }
+
+  .bento-slot.empty-slot::after {
+    content: '+';
+    font-size: 1.5em;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+  }
+
+  .food-palette {
+    background: white;
+    border-radius: 15px;
+    padding: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  }
+  .food-palette h3 {
+    text-align: center;
+    color: #c44dff;
+    margin-bottom: 10px;
+    font-size: 1em;
+  }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .palette-item {
+    background: linear-gradient(135deg, #f3e5f5, #fce4ec);
+    border-radius: 10px;
+    padding: 6px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    user-select: none;
+  }
+  .palette-item:active { 
+    transform: scale(0.92); 
+    border-color: #c44dff;
+  }
+  .palette-item .p-image { width: 40px; height: 40px; display: block; margin: 0 auto; }
+  .palette-item .p-en { font-size: 0.65em; font-weight: 700; color: #333; display: block; margin-top: 2px; line-height: 1.1; }
+  .palette-item .p-ru { font-size: 0.6em; color: #888; display: block; line-height: 1.1; }
+  .palette-item.used {
+    opacity: 0.35;
+    pointer-events: none;
+    filter: grayscale(0.6);
+  }
+
+  .description-panel {
+    margin-top: 15px;
+    background: white;
+    border-radius: 15px;
+    padding: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .description-panel h3 {
+    color: #c44dff;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+  }
+  .description-panel textarea {
+    width: 100%;
+    min-height: 60px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9em;
+    resize: vertical;
+    transition: border-color 0.3s;
+  }
+  .description-panel textarea:focus {
+    outline: none;
+    border-color: #c44dff;
+  }
+  .description-panel .hint {
+    font-size: 0.75em;
+    color: #999;
+    margin-top: 5px;
+    line-height: 1.3;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex: 1;
+    max-width: 200px;
+    min-width: 140px;
+  }
+  .action-btn:active {
+    transform: scale(0.96);
+  }
+  .action-btn.primary {
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    color: white;
+    box-shadow: 0 4px 15px rgba(196, 77, 255, 0.3);
+  }
+  .action-btn.secondary {
+    background: white;
+    color: #666;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    overflow-y: auto;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 20px 15px;
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: popIn 0.3s ease;
+    margin: auto;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal .big-emoji { font-size: 2.5em; margin-bottom: 8px; }
+  .modal h2 { color: #c44dff; font-size: 1.4em; margin-bottom: 8px; }
+  .modal p { color: #666; font-size: 0.9em; line-height: 1.5; }
+
+  .bento-result-image {
+    width: 100%;
+    max-width: 400px;
+    margin: 10px auto;
+    border-radius: 15px;
+    box-shadow: 0 6px 25px rgba(244, 143, 177, 0.4);
+    animation: slideUp 0.5s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal .foods-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin: 10px 0;
+  }
+  .modal .food-badge {
+    background: #f3e5f5;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+  }
+  .modal .food-badge strong {
+    color: #880e4f;
+    font-weight: 700;
+  }
+  .modal .food-badge span {
+    color: #888;
+    font-size: 0.9em;
+  }
+
+  .modal .modal-btn {
+    margin: 6px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-block;
+  }
+  .modal .modal-btn:active { transform: scale(0.95); }
+  .modal .modal-btn.download {
+    background: linear-gradient(135deg, #4caf50, #8bc34a);
+  }
+  .modal .modal-btn.secondary {
+    background: #f5f5f5;
+    color: #666;
+  }
+
+  .confetti-piece {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    top: -10px;
+    z-index: 1001;
+    animation: confettiFall linear forwards;
+    pointer-events: none;
+  }
+  @keyframes confettiFall {
+    to {
+      top: 110vh;
+      transform: rotate(720deg);
+    }
+  }
+
+  /* Desktop styles */
+  @media (min-width: 600px) {
+    .header h1 { font-size: 2em; }
+    .header p { font-size: 1em; }
+    .matching-grid { gap: 12px; }
+    .food-card, .word-card { padding: 10px 14px; }
+    .food-image { width: 50px; height: 50px; }
+    .bento-layout { grid-template-columns: 1fr 1fr; gap: 20px; }
+    .bento-grid { min-height: 280px; gap: 8px; }
+    .bento-slot { min-height: 85px; border-radius: 15px; }
+    .bento-slot .slot-image { width: 60px; height: 60px; }
+    .palette-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .palette-item .p-image { width: 50px; height: 50px; }
+    .palette-item .p-en { font-size: 0.75em; }
+    .modal { padding: 30px; }
+    .modal h2 { font-size: 1.6em; }
+  }
+
+  /* Very small screens */
+  @media (max-width: 360px) {
+    .header h1 { font-size: 1.3em; }
+    .palette-grid { grid-template-columns: repeat(3, 1fr); }
+    .bento-grid { min-height: 200px; }
+    .bento-slot .slot-image { width: 40px; height: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🍱 Create Your Bento!</h1>
+  <p>Интерактивная игра по теме "Еда"</p>
+  <div class="lesson-info">Spotlight 8 · Unit 2a</div>
+</div>
+
+<div class="stage-bar">
+  <button class="stage-btn active" id="stage1Btn" onclick="switchStage(1)">
+    🎯 Этап 1
+    <span class="badge hidden" id="stage1Badge">✓</span>
+  </button>
+  <button class="stage-btn" id="stage2Btn" onclick="switchStage(2)">
+     Этап 2
+    <span class="badge hidden" id="stage2Badge">✓</span>
+  </button>
+</div>
+
+<div class="stage active" id="stage1">
+  <div class="matching-instruction">
+    Нажми на <span>картинку</span>, затем на <span>перевод</span>
+  </div>
+
+  <div class="score-board">
+    <div class="score-item">✅ <span class="num" id="correctCount">0</span></div>
+    <div class="score-item">❌ <span class="num" id="wrongCount">0</span></div>
+    <div class="score-item"> <span class="num" id="remainCount">12</span></div>
+  </div>
+
+  <div class="matching-grid">
+    <div class="food-column" id="foodColumn"></div>
+    <div class="word-column" id="wordColumn"></div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="action-btn secondary" onclick="resetStage1()"> Заново</button>
+  </div>
+</div>
+
+<div class="stage" id="stage2">
+  <div class="bento-instruction">
+    Выбери продукт и нажми на секцию бенто
+  </div>
+
+  <div class="bento-layout">
+    <div class="bento-box">
+      <div class="bento-grid" id="bentoGrid">
+        <div class="bento-slot empty-slot" data-slot="0" onclick="placeInSlot(0)"></div>
+        <div class="bento-slot empty-slot" data-slot="1" onclick="placeInSlot(1)"></div>
+        <div class="bento-slot empty-slot" data-slot="2" onclick="placeInSlot(2)"></div>
+        <div class="bento-slot empty-slot" data-slot="3" onclick="placeInSlot(3)"></div>
+        <div class="bento-slot empty-slot" data-slot="4" onclick="placeInSlot(4)"></div>
+      </div>
+    </div>
+
+    <div class="food-palette">
+      <h3>🥗 Продукты</h3>
+      <div class="palette-grid" id="paletteGrid"></div>
+    </div>
+  </div>
+
+  <div class="description-panel">
+    <h3>️ Опиши бенто на английском:</h3>
+    <textarea id="bentoDescription" placeholder="In my bento I have..."></textarea>
+    <div class="hint">💡 I'd like to put... / I choose... / It's tasty!</div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="action-btn primary" onclick="showBentoResult()">🎉 Готово!</button>
+    <button class="action-btn secondary" onclick="resetStage2()">🔄 Очистить</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modalContent">
+    <div class="big-emoji" id="modalEmoji">🎉</div>
+    <h2 id="modalTitle">Отлично!</h2>
+    <div id="modalBody"></div>
+    <div id="modalButtons"></div>
+  </div>
+</div>
+
+<script>
+// ===== SVG IMAGES FOR FOOD =====
+const foodImages = {
+  onigiri: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 L80 75 L20 75 Z" fill="#f5f5f5" stroke="#ddd" stroke-width="2"/><rect x="35" y="50" width="30" height="25" fill="#333" rx="3"/><circle cx="40" cy="35" r="1.5" fill="#ddd"/><circle cx="55" cy="40" r="1.5" fill="#ddd"/><circle cx="48" cy="55" r="1.5" fill="#ddd"/></svg>`,
+  broccoli: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="35" cy="35" r="15" fill="#4caf50"/><circle cx="65" cy="35" r="15" fill="#4caf50"/><circle cx="50" cy="25" r="15" fill="#66bb6a"/><circle cx="40" cy="50" r="12" fill="#4caf50"/><circle cx="60" cy="50" r="12" fill="#4caf50"/><rect x="45" y="55" width="10" height="30" fill="#8bc34a" rx="3"/></svg>`,
+  octopus: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="35" rx="25" ry="20" fill="#ff8a80"/><circle cx="42" cy="32" r="3" fill="#333"/><circle cx="58" cy="32" r="3" fill="#333"/><path d="M45 40 Q50 43 55 40" stroke="#333" stroke-width="2" fill="none"/><path d="M30 50 Q25 65 30 75" stroke="#ff8a80" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M40 52 Q38 67 42 77" stroke="#ff8a80" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M50 53 Q50 68 50 78" stroke="#ff8a80" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M60 52 Q62 67 58 77" stroke="#ff8a80" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M70 50 Q75 65 70 75" stroke="#ff8a80" stroke-width="8" fill="none" stroke-linecap="round"/></svg>`,
+  tomato: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="35" cy="55" r="22" fill="#f44336"/><circle cx="65" cy="50" r="20" fill="#f44336"/><path d="M35 33 L35 25 M30 28 L40 28" stroke="#4caf50" stroke-width="3" stroke-linecap="round"/><path d="M65 30 L65 22 M60 25 L70 25" stroke="#4caf50" stroke-width="3" stroke-linecap="round"/></svg>`,
+  tamagoyaki: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="20" y="35" width="60" height="35" rx="5" fill="#ffd54f"/><rect x="20" y="35" width="60" height="8" rx="4" fill="#ffca28"/><path d="M25 45 Q50 48 75 45" stroke="#ffb300" stroke-width="2" fill="none"/><path d="M25 55 Q50 58 75 55" stroke="#ffb300" stroke-width="2" fill="none"/><path d="M25 65 Q50 68 75 65" stroke="#ffb300" stroke-width="2" fill="none"/></svg>`,
+  gyoza: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M20 60 Q20 40 50 40 Q80 40 80 60 Q80 70 50 70 Q20 70 20 60" fill="#fff9c4" stroke="#f0e68c" stroke-width="2"/><path d="M25 50 Q30 45 35 50 Q40 45 45 50 Q50 45 55 50 Q60 45 65 50 Q70 45 75 50" stroke="#d7ccc8" stroke-width="2" fill="none"/></svg>`,
+  carrot: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 20 L70 80 L30 80 Z" fill="#ff9800"/><path d="M45 35 L55 35 M42 50 L58 50 M40 65 L60 65" stroke="#ff5722" stroke-width="2" opacity="0.5"/><path d="M50 20 L45 10 M50 20 L50 8 M50 20 L55 10" stroke="#4caf50" stroke-width="3" stroke-linecap="round"/></svg>`,
+  edamame: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="35" cy="50" rx="15" ry="25" fill="#8bc34a" transform="rotate(-20 35 50)"/><ellipse cx="50" cy="50" rx="15" ry="25" fill="#8bc34a"/><ellipse cx="65" cy="50" rx="15" ry="25" fill="#8bc34a" transform="rotate(20 65 50)"/><circle cx="35" cy="45" r="4" fill="#aed581"/><circle cx="50" cy="45" r="4" fill="#aed581"/><circle cx="65" cy="45" r="4" fill="#aed581"/></svg>`,
+  sushi: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="55" rx="35" ry="20" fill="#f5f5f5"/><ellipse cx="50" cy="50" rx="35" ry="18" fill="#ff8a65"/><ellipse cx="50" cy="45" rx="35" ry="15" fill="#ef5350"/><path d="M20 50 Q50 55 80 50" stroke="#333" stroke-width="2" fill="none"/></svg>`,
+  rice: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="60" rx="35" ry="20" fill="#fff"/><ellipse cx="50" cy="55" rx="35" ry="18" fill="#f5f5f5"/><circle cx="40" cy="50" r="2" fill="#e0e0e0"/><circle cx="50" cy="48" r="2" fill="#e0e0e0"/><circle cx="60" cy="50" r="2" fill="#e0e0e0"/></svg>`,
+  cucumber: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="50" rx="35" ry="15" fill="#66bb6a"/><circle cx="35" cy="48" r="2" fill="#81c784"/><circle cx="50" cy="48" r="2" fill="#81c784"/><circle cx="65" cy="48" r="2" fill="#81c784"/></svg>`,
+  corn: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="55" rx="20" ry="30" fill="#ffeb3b"/><circle cx="45" cy="45" r="3" fill="#fdd835"/><circle cx="55" cy="45" r="3" fill="#fdd835"/><circle cx="45" cy="55" r="3" fill="#fdd835"/><circle cx="55" cy="55" r="3" fill="#fdd835"/><circle cx="45" cy="65" r="3" fill="#fdd835"/><circle cx="55" cy="65" r="3" fill="#fdd835"/><path d="M50 25 Q45 20 40 25 M50 25 Q55 20 60 25" stroke="#8bc34a" stroke-width="3" fill="none"/></svg>`
+};
+
+const foods = [
+  { id: 'onigiri', image: foodImages.onigiri, en: 'Onigiri', ru: 'Рисовый шарик' },
+  { id: 'broccoli', image: foodImages.broccoli, en: 'Broccoli', ru: 'Брокколи' },
+  { id: 'octopus', image: foodImages.octopus, en: 'Octopus Sausage', ru: 'Сосиска-осьминожка' },
+  { id: 'tomato', image: foodImages.tomato, en: 'Cherry Tomatoes', ru: 'Помидоры черри' },
+  { id: 'tamagoyaki', image: foodImages.tamagoyaki, en: 'Tamagoyaki', ru: 'Японский омлет' },
+  { id: 'gyoza', image: foodImages.gyoza, en: 'Gyoza', ru: 'Гёдза' },
+  { id: 'carrot', image: foodImages.carrot, en: 'Carrot', ru: 'Морковь' },
+  { id: 'edamame', image: foodImages.edamame, en: 'Edamame', ru: 'Эдамаме' },
+  { id: 'sushi', image: foodImages.sushi, en: 'Sushi Roll', ru: 'Ролл' },
+  { id: 'rice', image: foodImages.rice, en: 'Rice', ru: 'Рис' },
+  { id: 'cucumber', image: foodImages.cucumber, en: 'Cucumber', ru: 'Огурец' },
+  { id: 'corn', image: foodImages.corn, en: 'Corn', ru: 'Кукуруза' },
+];
+
+// ===== STAGE 1: MATCHING =====
+let selectedFood = null;
+let selectedWord = null;
+let correctMatches = 0;
+let wrongMatches = 0;
+let matchedIds = new Set();
+let stage1Complete = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function initStage1() {
+  const foodCol = document.getElementById('foodColumn');
+  const wordCol = document.getElementById('wordColumn');
+  foodCol.innerHTML = '';
+  wordCol.innerHTML = '';
+
+  const shuffledFoods = shuffle(foods);
+  const shuffledWords = shuffle(foods);
+
+  shuffledFoods.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'food-card';
+    card.dataset.id = f.id;
+    card.innerHTML = `<div class="food-image">${f.image}</div><span class="food-name-en">${f.en}</span>`;
+    card.onclick = () => selectFood(card, f.id);
+    foodCol.appendChild(card);
+  });
+
+  shuffledWords.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.dataset.id = f.id;
+    card.innerHTML = `<span class="food-name-ru">${f.ru}</span>`;
+    card.onclick = () => selectWord(card, f.id);
+    wordCol.appendChild(card);
+  });
+
+  correctMatches = 0;
+  wrongMatches = 0;
+  matchedIds.clear();
+  selectedFood = null;
+  selectedWord = null;
+  updateScores();
+}
+
+function selectFood(card, id) {
+  if (matchedIds.has(id)) return;
+  document.querySelectorAll('.food-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedFood = { card, id };
+  tryMatch();
+}
+
+function selectWord(card, id) {
+  if (matchedIds.has(id)) return;
+  document.querySelectorAll('.word-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedWord = { card, id };
+  tryMatch();
+}
+
+function tryMatch() {
+  if (!selectedFood || !selectedWord) return;
+
+  if (selectedFood.id === selectedWord.id) {
+    selectedFood.card.classList.remove('selected');
+    selectedWord.card.classList.remove('selected');
+    selectedFood.card.classList.add('correct');
+    selectedWord.card.classList.add('correct');
+    matchedIds.add(selectedFood.id);
+    correctMatches++;
+    playSound('correct');
+  } else {
+    selectedFood.card.classList.add('wrong');
+    selectedWord.card.classList.add('wrong');
+    wrongMatches++;
+    playSound('wrong');
+    setTimeout(() => {
+      selectedFood.card.classList.remove('wrong', 'selected');
+      selectedWord.card.classList.remove('wrong', 'selected');
+    }, 500);
+  }
+
+  selectedFood = null;
+  selectedWord = null;
+  updateScores();
+
+  if (matchedIds.size === foods.length && !stage1Complete) {
+    stage1Complete = true;
+    setTimeout(() => {
+      document.getElementById('stage1Badge').classList.remove('hidden');
+      showModal('🎉', 'Отлично!', 
+        `<p>Правильно: <b>${correctMatches}</b> | Ошибок: <b>${wrongMatches}</b></p><p>Переходи к этапу 2!</p>`,
+        [{text: 'Перейти к бенто ', class: 'primary', action: () => { closeModal(); switchStage(2); }}]);
+    }, 400);
+  }
+}
+
+function updateScores() {
+  document.getElementById('correctCount').textContent = correctMatches;
+  document.getElementById('wrongCount').textContent = wrongMatches;
+  document.getElementById('remainCount').textContent = foods.length - matchedIds.size;
+}
+
+function resetStage1() {
+  stage1Complete = false;
+  document.getElementById('stage1Badge').classList.add('hidden');
+  initStage1();
+}
+
+// ===== STAGE 2: BENTO BUILDER =====
+let selectedPaletteItem = null;
+let bentoSlots = [null, null, null, null, null];
+let stage2Complete = false;
+
+function initStage2() {
+  const palette = document.getElementById('paletteGrid');
+  palette.innerHTML = '';
+
+  const shuffled = shuffle(foods);
+  shuffled.forEach(f => {
+    const item = document.createElement('div');
+    item.className = 'palette-item';
+    item.dataset.id = f.id;
+    item.innerHTML = `
+      <div class="p-image">${f.image}</div>
+      <span class="p-en">${f.en}</span>
+      <span class="p-ru">${f.ru}</span>
+    `;
+    item.onclick = () => selectPaletteItem(item, f);
+    palette.appendChild(item);
+  });
+
+  bentoSlots = [null, null, null, null, null];
+  selectedPaletteItem = null;
+  updateBentoSlots();
+}
+
+function selectPaletteItem(item, food) {
+  if (item.classList.contains('used')) return;
+  document.querySelectorAll('.palette-item').forEach(i => i.style.border = '2px solid transparent');
+  item.style.border = '2px solid #c44dff';
+  selectedPaletteItem = { item, food };
+}
+
+function placeInSlot(slotIndex) {
+  if (!selectedPaletteItem) {
+    if (bentoSlots[slotIndex]) {
+      removeFromSlot(slotIndex);
+    }
+    return;
+  }
+
+  const prevSlot = bentoSlots.indexOf(selectedPaletteItem.food.id);
+  if (prevSlot !== -1) {
+    bentoSlots[prevSlot] = null;
+  }
+
+  bentoSlots[slotIndex] = selectedPaletteItem.food.id;
+  selectedPaletteItem.item.classList.add('used');
+  selectedPaletteItem.item.style.border = '2px solid transparent';
+  selectedPaletteItem = null;
+  updateBentoSlots();
+  playSound('place');
+}
+
+function removeFromSlot(slotIndex) {
+  const foodId = bentoSlots[slotIndex];
+  if (!foodId) return;
+  bentoSlots[slotIndex] = null;
+  const paletteItem = document.querySelector(`.palette-item[data-id="${foodId}"]`);
+  if (paletteItem) paletteItem.classList.remove('used');
+  updateBentoSlots();
+}
+
+function updateBentoSlots() {
+  const slots = document.querySelectorAll('.bento-slot');
+  slots.forEach((slot, i) => {
+    const foodId = bentoSlots[i];
+    if (foodId) {
+      const food = foods.find(f => f.id === foodId);
+      slot.className = 'bento-slot filled';
+      slot.innerHTML = `
+        <button class="slot-remove" onclick="event.stopPropagation(); removeFromSlot(${i})">✕</button>
+        <div class="slot-image">${food.image}</div>
+      `;
+    } else {
+      slot.className = 'bento-slot empty-slot';
+      slot.innerHTML = '';
+    }
+  });
+}
+
+// ===== GENERATE BENTO IMAGE (SVG) =====
+function generateBentoSVG() {
+  const W = 600, H = 420;
+  
+  const slots = [
+    { x: 30, y: 70, w: 170, h: 130 },
+    { x: 215, y: 70, w: 170, h: 130 },
+    { x: 400, y: 70, w: 170, h: 130 },
+    { x: 30, y: 215, w: 260, h: 150 },
+    { x: 305, y: 215, w: 265, h: 150 },
+  ];
+
+  let slotsSVG = '';
+  slots.forEach((slot, i) => {
+    const food = bentoSlots[i] ? foods.find(f => f.id === bentoSlots[i]) : null;
+    
+    slotsSVG += `<rect x="${slot.x}" y="${slot.y}" width="${slot.w}" height="${slot.h}" 
+                  rx="20" fill="rgba(255,255,255,0.7)" stroke="white" stroke-width="3"/>`;
+    
+    if (food) {
+      const imgSize = Math.min(slot.w, slot.h) * 0.55;
+      const imgX = slot.x + (slot.w - imgSize) / 2;
+      const imgY = slot.y + (slot.h - imgSize) / 2 - 10;
+      
+      slotsSVG += `<circle cx="${slot.x + slot.w/2}" cy="${slot.y + slot.h/2 - 5}" r="${imgSize/2 + 5}" fill="rgba(255,255,255,0.5)"/>`;
+      
+      slotsSVG += `<foreignObject x="${imgX}" y="${imgY}" width="${imgSize}" height="${imgSize}">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+          ${food.image}
+        </div>
+      </foreignObject>`;
+      
+      slotsSVG += `<text x="${slot.x + slot.w/2}" y="${slot.y + slot.h - 15}" 
+                    text-anchor="middle" font-family="Nunito, sans-serif" font-size="13" 
+                    font-weight="700" fill="#880e4f">${food.en}</text>`;
+    }
+  });
+
+  const decorations = `
+    <text x="60" y="395" font-size="20">🐻</text>
+    <text x="140" y="395" font-size="18">⭐</text>
+    <text x="200" y="395" font-size="20">️</text>
+    <text x="280" y="395" font-size="18">⭐</text>
+    <text x="340" y="395" font-size="20">🐻</text>
+    <text x="420" y="395" font-size="18">⭐</text>
+    <text x="490" y="395" font-size="20">☁️</text>
+    <text x="540" y="395" font-size="18">⭐</text>
+  `;
+
+  const title = `<text x="${W/2}" y="45" text-anchor="middle" font-family="Nunito, sans-serif" 
+                 font-size="28" font-weight="900" fill="#880e4f"> My Bento 🍱</text>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+    <defs>
+      <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#f8bbd0"/>
+        <stop offset="100%" style="stop-color:#f48fb1"/>
+      </linearGradient>
+    </defs>
+    <rect width="${W}" height="${H}" fill="url(#boxGrad)" rx="30"/>
+    <rect x="15" y="15" width="${W-30}" height="${H-30}" fill="none" stroke="white" stroke-width="3" rx="25" opacity="0.5"/>
+    ${title}
+    ${slotsSVG}
+    ${decorations}
+  </svg>`;
+}
+
+function downloadBentoImage() {
+  const svg = generateBentoSVG();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1200, H = 840;
+  canvas.width = W;
+  canvas.height = H;
+
+  const img = new Image();
+  const svgBlob = new Blob([svg], {type: 'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = function() {
+    ctx.fillStyle = '#f8bbd0';
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 0, 0, W, H);
+    
+    const pngUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'my-bento.png';
+    link.href = pngUrl;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+
+function showBentoResult() {
+  const filled = bentoSlots.filter(s => s !== null).length;
+  if (filled === 0) {
+    showModal('📦', 'Бенто пустое!', 
+      '<p>Добавь хотя бы один продукт!</p>',
+      [{text: 'OK 👌', class: 'primary', action: closeModal}]);
+    return;
+  }
+
+  const description = document.getElementById('bentoDescription').value.trim();
+  
+  let foodsList = '<div class="foods-list">';
+  const usedFoods = bentoSlots.filter(s => s).map(id => foods.find(f => f.id === id));
+  usedFoods.forEach(f => {
+    foodsList += `<div class="food-badge"><strong>${f.en}</strong><span> (${f.ru})</span></div>`;
+  });
+  foodsList += '</div>';
+
+  let descHtml = '';
+  if (description) {
+    descHtml = `<div style="background:#f5f5f5;padding:10px;border-radius:10px;margin:10px 0;text-align:left;">
+      <div style="font-size:0.8em;color:#999;margin-bottom:4px;"> My description:</div>
+      <div style="font-style:italic;color:#555;font-size:0.9em;">"${description}"</div>
+    </div>`;
+  }
+
+  const bentoSVG = generateBentoSVG();
+  const svgBlob = new Blob([bentoSVG], {type: 'image/svg+xml;charset=utf-8'});
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  let html = `
+    <img src="${svgUrl}" class="bento-result-image" alt="My Bento" onload="URL.revokeObjectURL('${svgUrl}')"/>
+    <div style="margin:8px 0;color:#c44dff;font-weight:700;">В бенто ${filled} продукт(ов):</div>
+    ${foodsList}
+    ${descHtml}
+  `;
+
+  const buttons = [
+    {text: '️ Скачать', class: 'download', action: downloadBentoImage},
+    {text: 'Закрыть', class: 'secondary', action: closeModal}
+  ];
+
+  if (filled >= 5 && !stage2Complete) {
+    stage2Complete = true;
+    document.getElementById('stage2Badge').classList.remove('hidden');
+    setTimeout(launchConfetti, 300);
+  }
+
+  showModal('🍱', 'Твой бенто готов!', html, buttons);
+}
+
+function resetStage2() {
+  stage2Complete = false;
+  document.getElementById('stage2Badge').classList.add('hidden');
+  document.getElementById('bentoDescription').value = '';
+  initStage2();
+}
+
+function switchStage(num) {
+  document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`stage${num}`).classList.add('active');
+  document.getElementById(`stage${num}Btn`).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showModal(emoji, title, bodyHtml, buttons = []) {
+  document.getElementById('modalEmoji').textContent = emoji;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  
+  const btnContainer = document.getElementById('modalButtons');
+  btnContainer.innerHTML = '';
+  buttons.forEach(btn => {
+    const b = document.createElement('button');
+    b.className = `modal-btn ${btn.class || 'primary'}`;
+    b.textContent = btn.text;
+    b.onclick = btn.action;
+    btnContainer.appendChild(b);
+  });
+  
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function launchConfetti() {
+  const colors = ['#ff6b9d', '#c44dff', '#4caf50', '#ff9800', '#2196f3', '#ffeb3b'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (Math.random() * 8 + 4) + 'px';
+      piece.style.height = (Math.random() * 8 + 4) + 'px';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4000);
+    }, i * 40);
+  }
+}
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (type === 'correct') {
+    osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+    osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+  } else if (type === 'wrong') {
+    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+  } else if (type === 'place') {
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(554, audioCtx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+  }
+}
+
+initStage1();
+initStage2();
+</script>
+
+</body>
+</html>
