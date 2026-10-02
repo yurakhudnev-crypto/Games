@@ -500,6 +500,7 @@
     }
   }
 
+  /* Desktop styles */
   @media (min-width: 600px) {
     .header h1 { font-size: 2em; }
     .header p { font-size: 1em; }
@@ -517,6 +518,7 @@
     .modal h2 { font-size: 1.6em; }
   }
 
+  /* Very small screens */
   @media (max-width: 360px) {
     .header h1 { font-size: 1.3em; }
     .palette-grid { grid-template-columns: repeat(3, 1fr); }
@@ -552,7 +554,7 @@
   <div class="score-board">
     <div class="score-item">✅ <span class="num" id="correctCount">0</span></div>
     <div class="score-item">❌ <span class="num" id="wrongCount">0</span></div>
-    <div class="score-item">📦 <span class="num" id="remainCount">12</span></div>
+    <div class="score-item"> <span class="num" id="remainCount">12</span></div>
   </div>
 
   <div class="matching-grid">
@@ -561,7 +563,7 @@
   </div>
 
   <div class="action-buttons">
-    <button class="action-btn secondary" onclick="resetStage1()">🔄 Заново</button>
+    <button class="action-btn secondary" onclick="resetStage1()"> Заново</button>
   </div>
 </div>
 
@@ -588,7 +590,7 @@
   </div>
 
   <div class="description-panel">
-    <h3>✏️ Опиши бенто на английском:</h3>
+    <h3>️ Опиши бенто на английском:</h3>
     <textarea id="bentoDescription" placeholder="In my bento I have..."></textarea>
     <div class="hint">💡 I'd like to put... / I choose... / It's tasty!</div>
   </div>
@@ -740,7 +742,7 @@ function tryMatch() {
       document.getElementById('stage1Badge').classList.remove('hidden');
       showModal('🎉', 'Отлично!', 
         `<p>Правильно: <b>${correctMatches}</b> | Ошибок: <b>${wrongMatches}</b></p><p>Переходи к этапу 2!</p>`,
-        [{text: 'Перейти к бенто 🍱', class: 'primary', action: () => { closeModal(); switchStage(2); }}]);
+        [{text: 'Перейти к бенто ', class: 'primary', action: () => { closeModal(); switchStage(2); }}]);
     }, 400);
   }
 }
@@ -842,8 +844,7 @@ function updateBentoSlots() {
 
 // ===== GENERATE BENTO IMAGE (SVG) =====
 function generateBentoSVG() {
-  const W = 600, H = 520; // Увеличена высота для описания
-  const description = document.getElementById('bentoDescription').value.trim();
+  const W = 600, H = 420;
   
   const slots = [
     { x: 30, y: 70, w: 170, h: 130 },
@@ -867,9 +868,11 @@ function generateBentoSVG() {
       
       slotsSVG += `<circle cx="${slot.x + slot.w/2}" cy="${slot.y + slot.h/2 - 5}" r="${imgSize/2 + 5}" fill="rgba(255,255,255,0.5)"/>`;
       
-      // Встраиваем SVG напрямую (без foreignObject для надёжности)
-      const foodSVG = food.image.replace('<svg ', `<svg x="${imgX}" y="${imgY}" width="${imgSize}" height="${imgSize}" `);
-      slotsSVG += foodSVG;
+      slotsSVG += `<foreignObject x="${imgX}" y="${imgY}" width="${imgSize}" height="${imgSize}">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+          ${food.image}
+        </div>
+      </foreignObject>`;
       
       slotsSVG += `<text x="${slot.x + slot.w/2}" y="${slot.y + slot.h - 15}" 
                     text-anchor="middle" font-family="Nunito, sans-serif" font-size="13" 
@@ -880,7 +883,7 @@ function generateBentoSVG() {
   const decorations = `
     <text x="60" y="395" font-size="20">🐻</text>
     <text x="140" y="395" font-size="18">⭐</text>
-    <text x="200" y="395" font-size="20">☁️</text>
+    <text x="200" y="395" font-size="20">️</text>
     <text x="280" y="395" font-size="18">⭐</text>
     <text x="340" y="395" font-size="20">🐻</text>
     <text x="420" y="395" font-size="18">⭐</text>
@@ -889,20 +892,7 @@ function generateBentoSVG() {
   `;
 
   const title = `<text x="${W/2}" y="45" text-anchor="middle" font-family="Nunito, sans-serif" 
-                 font-size="28" font-weight="900" fill="#880e4f">My Bento </text>`;
-
-  // Добавляем описание
-  let descSVG = '';
-  if (description) {
-    const descY = 420;
-    descSVG = `
-      <rect x="30" y="${descY}" width="${W-60}" height="80" rx="10" fill="rgba(255,255,255,0.6)" stroke="white" stroke-width="2"/>
-      <text x="${W/2}" y="${descY + 20}" text-anchor="middle" font-family="Nunito, sans-serif" 
-            font-size="12" font-weight="700" fill="#c44dff">My description:</text>
-      <text x="${W/2}" y="${descY + 45}" text-anchor="middle" font-family="Nunito, sans-serif" 
-            font-size="14" font-style="italic" fill="#555">${escapeXml(description)}</text>
-    `;
-  }
+                 font-size="28" font-weight="900" fill="#880e4f"> My Bento 🍱</text>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
     <defs>
@@ -916,23 +906,14 @@ function generateBentoSVG() {
     ${title}
     ${slotsSVG}
     ${decorations}
-    ${descSVG}
   </svg>`;
-}
-
-function escapeXml(str) {
-  return str.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&apos;');
 }
 
 function downloadBentoImage() {
   const svg = generateBentoSVG();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  const W = 1200, H = 1040; // 2x для качества
+  const W = 1200, H = 840;
   canvas.width = W;
   canvas.height = H;
 
@@ -949,31 +930,9 @@ function downloadBentoImage() {
     const link = document.createElement('a');
     link.download = 'my-bento.png';
     link.href = pngUrl;
-    
-    // Для iOS Safari
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      const newWindow = window.open();
-      newWindow.document.write('<img src="' + pngUrl + '" style="max-width:100%;">');
-      newWindow.document.title = 'My Bento';
-    } else {
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-    
+    link.click();
     URL.revokeObjectURL(url);
   };
-  
-  img.onerror = function() {
-    // Fallback: скачать как SVG
-    const link = document.createElement('a');
-    link.download = 'my-bento.svg';
-    link.href = url;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-  
   img.src = url;
 }
 
@@ -998,7 +957,7 @@ function showBentoResult() {
   let descHtml = '';
   if (description) {
     descHtml = `<div style="background:#f5f5f5;padding:10px;border-radius:10px;margin:10px 0;text-align:left;">
-      <div style="font-size:0.8em;color:#999;margin-bottom:4px;">📝 My description:</div>
+      <div style="font-size:0.8em;color:#999;margin-bottom:4px;"> My description:</div>
       <div style="font-style:italic;color:#555;font-size:0.9em;">"${description}"</div>
     </div>`;
   }
@@ -1008,14 +967,14 @@ function showBentoResult() {
   const svgUrl = URL.createObjectURL(svgBlob);
 
   let html = `
-    <img src="${svgUrl}" class="bento-result-image" alt="My Bento"/>
+    <img src="${svgUrl}" class="bento-result-image" alt="My Bento" onload="URL.revokeObjectURL('${svgUrl}')"/>
     <div style="margin:8px 0;color:#c44dff;font-weight:700;">В бенто ${filled} продукт(ов):</div>
     ${foodsList}
     ${descHtml}
   `;
 
   const buttons = [
-    {text: '️ Скачать PNG', class: 'download', action: downloadBentoImage},
+    {text: '️ Скачать', class: 'download', action: downloadBentoImage},
     {text: 'Закрыть', class: 'secondary', action: closeModal}
   ];
 
